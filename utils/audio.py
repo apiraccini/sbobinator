@@ -1,6 +1,12 @@
 from pathlib import Path
+import os
+
 from pydub import AudioSegment
 from tqdm import tqdm
+
+from dotenv import load_dotenv
+import openai
+
 
 def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     """
@@ -44,14 +50,40 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
         chunk_segment = large_mp3[start:end]
         output_path_chunk = output_path / f"split_{chunk_number}.mp3"
         chunk_segment.export(output_path_chunk, format="mp3")
-        print(f"  Chunk {chunk_number} created, approx size: {Path(output_path_chunk).stat().st_size/(1024 * 1024)} Mb.")
     
     print('Done.')
 
+
+def transcribe_audio_chunks(audio_chunks_path):
+    """
+    Transcribes each audio chunk in the specified directory using the OpenAI API.
+
+    Parameters:
+    - audio_chunks_path (Path): Pathlib Path object pointing to the directory containing audio chunks.
+
+    Returns:
+    - list: List of transcribed texts for each audio chunk.
+    """
+    
+    load_dotenv()
+    openai.api_key = os.environ['OPENAI_API_KEY']
+
+    transcripts = []
+    for audio_file in tqdm(audio_chunks_path.glob("*.mp3")):
+        with open(audio_file, 'rb') as audio:
+            transcription = openai.Audio.transcribe(
+                model='whisper-1',
+                file=audio,
+                language='en'
+            )
+            transcripts.append(transcription['text'])
+
+    return transcripts
+
 if __name__ == '__main__':
     
-    input_file_path = "data/raw" 
-    output_folder_path = "data/processed"
+    raw_file_path = Path("data/raw") 
+    processed_files_path = Path("data/processed")
     max_chunk_size_mb = 20 
 
-    split_big_audio(input_file_path, output_folder_path, max_chunk_size_mb)
+    split_big_audio(raw_file_path, processed_files_path, max_chunk_size_mb)
