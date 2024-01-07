@@ -1,11 +1,12 @@
 from pathlib import Path
 import os
-
-from pydub import AudioSegment
+import pickle
 from tqdm import tqdm
 
+from pydub import AudioSegment
+
+from openai import OpenAI
 from dotenv import load_dotenv
-import openai
 
 
 def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
@@ -54,31 +55,33 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     print('Done.')
 
 
-def transcribe_audio_chunks(audio_chunks_path):
+def transcribe_audio_chunks(audio_chunks_path, output_folder):
     """
-    Transcribes each audio chunk in the specified directory using the OpenAI API.
+    Transcribes each audio chunk in the specified directory using the OpenAI API 
+    and saves the list of trascriptions in a pickle file.
 
     Parameters:
     - audio_chunks_path (Path): Pathlib Path object pointing to the directory containing audio chunks.
-
-    Returns:
-    - list: List of transcribed texts for each audio chunk.
     """
     
     load_dotenv()
-    openai.api_key = os.environ['OPENAI_API_KEY']
+    client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     transcripts = []
     for audio_file in tqdm(audio_chunks_path.glob("*.mp3")):
         with open(audio_file, 'rb') as audio:
-            transcription = openai.Audio.transcribe(
-                model='whisper-1',
-                file=audio,
-                language='en'
-            )
-            transcripts.append(transcription['text'])
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio, 
+                response_format="text"
+                )
+            transcripts.append(transcript)
 
-    return transcripts
+    output_path = Path(output_folder)
+    output_path.mkdir(parents=True, exist_ok=True)
+    output_file_path = output_path / "transcripts.pkl"
+    with open(output_file_path, 'wb') as file:
+        pickle.dump(transcripts, file)
 
 if __name__ == '__main__':
     
