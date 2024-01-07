@@ -1,2 +1,2 @@
-# sbobinator
-Transcribe long audio, format and summarize output text.
+# sbobinator 🤖👩🏻‍⚕️
+Transcribe long audio, process output text.

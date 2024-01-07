@@ -5,25 +5,24 @@ import tiktoken
 from tqdm import tqdm 
 
 import markdown2
-import pdfkit
 
 from openai import OpenAI
 from dotenv import load_dotenv
 
 
 system_prompt = """
-You are a helpful assistant. You will receive a raw transcription from a call to the Whisper API. I need you to to process the text doing the following tasks:
+You are a helpful assistant. You will receive a chunk of a raw transcription from a call to the Whisper API. I need you to process the text doing the following tasks:
 - fix and add punctuation, if necessary
 - fix typos and general grammar or syntax errors
-- organize the text into sections, subsections (each with titles) and paragraphs
-This is very important, take a big breath and do this carefully. Use markdown syntax for headers and subheaders
+- organize the text into few relevant sections (only when there are different topics). Use markdown syntax for headers (use ## before the header)
+This is very important, take a big breath and perform the task carefully.
 """
 
 def prepare_messages(transcript, system_prompt):
 
     messages = [
         {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': f'Raw transcript:\n\n<<<{transcript}>>>\n\n'}   
+        {'role': 'user', 'content': f'\n\nTRANSCIPT CHUNK:\n\n<<<{transcript}>>>\n\nPROCESSED TRANSCRIPT CHUNK:'}   
     ]
 
     return messages
@@ -74,15 +73,26 @@ def num_tokens_from_messages(messages, model="gpt-4-0613"):
 
 
 def process_text(transcripts_list, output_folder, model):
+    """
+    Process transcripts using an LLM and save the processed text.
+
+    Args:
+    - transcripts_list (list): List of transcript chunks to be processed.
+    - output_folder (str): Path to the folder where output files will be saved.
+    - model (str): Name or ID of the OpenAI model to use for processing.
+    """
 
     load_dotenv()
     client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     responses = []
+    print('Processing the transcript chunks with AI...')
     for transcript in tqdm(transcripts_list):
         response = client.chat.completions.create(
             model=model,
             messages=prepare_messages(transcript, system_prompt),
+            temperature=0.001,
+            seed=42
         )
         text = response.choices[0].message.content
         responses.append(text)
@@ -94,18 +104,26 @@ def process_text(transcripts_list, output_folder, model):
     with open(output_file_path, 'wb') as file:
         pickle.dump(out, file)
     
+    print('Done.')
     return out
 
-def text2pdf(text):
+
+def text2html(text):
+    """
+    Convert input Markdown text to obatin a .html file.
+
+    Args:
+    - text (str): Input text in Markdown format.
+    """
 
     html_content = markdown2.markdown(text)
     output_path = Path("data/out")
     output_path.mkdir(parents=True, exist_ok=True)
 
+    print('Saving final outputs...')
     with open(output_path / 'transcript.html', 'w', encoding='utf-8') as file:
         file.write(html_content)
-
-    pdfkit.from_file(output_path / 'transcript.html', output_path / 'transcript.pdf')
+    print('Done.')
 
 
 if __name__ == '__main__':

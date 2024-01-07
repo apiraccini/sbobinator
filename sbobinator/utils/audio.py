@@ -12,16 +12,11 @@ from dotenv import load_dotenv
 def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     """
     Splits a single large MP3 file into smaller chunks with a maximum size specified in megabytes
-    while ensuring each split is also adjusted based on the total duration of the audio file.
 
     Parameters:
     - input_file (str): Path to the input MP3 file.
     - output_folder (str): Path to the folder where the split MP3 files will be saved.
     - max_chunk_size_mb (int): Maximum size of each chunk in megabytes. Default is 20 MB.
-
-    The function loads the MP3 file, determines its total size,
-    calculates the number of chunks based on the maximum chunk size,
-    and creates the smaller chunks, saving them in the specified output folder.
     """
 
     input_path = Path(input_folder)
@@ -33,11 +28,12 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
 
     size_in_bytes = Path(files[0]).stat().st_size
     size_in_megabytes = size_in_bytes / (1024 * 1024)
-    print(f"The size of the loaded MP3 file is approximately: {size_in_megabytes:.2f} Mb.")
+    print(f"The size of the provided MP3 file is approximately {size_in_megabytes:.2f} Mb.")
     
     max_chunk_size_bytes = max_chunk_size_mb * 1024 * 1024
     total_chunks = (size_in_bytes + max_chunk_size_bytes - 1) // max_chunk_size_bytes
 
+    print('Loading the audio file...')
     large_mp3 = AudioSegment.from_file(files[0], format="mp3")
 
     total_duration_ms = len(large_mp3)
@@ -46,6 +42,7 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     output_path = Path(output_folder)
     output_path.mkdir(parents=True, exist_ok=True)
 
+    print('Chunking the loaded audio file...')
     for chunk_number, start in tqdm(enumerate(range(0, len(large_mp3), max_chunk_duration_ms), start=1), total=total_chunks):
         end = start + max_chunk_duration_ms if start + max_chunk_duration_ms < len(large_mp3) else len(large_mp3)
         chunk_segment = large_mp3[start:end]
@@ -68,6 +65,7 @@ def transcribe_audio_chunks(audio_chunks_path, output_folder):
     client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     transcripts = []
+    print('Obtaining transcription for each file with AI...')
     for audio_file in tqdm(audio_chunks_path.glob("*.mp3")):
         with open(audio_file, 'rb') as audio:
             transcript = client.audio.transcriptions.create(
@@ -82,6 +80,8 @@ def transcribe_audio_chunks(audio_chunks_path, output_folder):
     output_file_path = output_path / "transcripts.pkl"
     with open(output_file_path, 'wb') as file:
         pickle.dump(transcripts, file)
+    print('Done.')
+
 
 if __name__ == '__main__':
     
