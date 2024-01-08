@@ -104,7 +104,6 @@ def process_text(transcripts_list, output_folder, model):
     with open(output_file_path, 'wb') as file:
         pickle.dump(out, file)
     
-    print('Done.')
     return out
 
 

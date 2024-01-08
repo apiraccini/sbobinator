@@ -48,8 +48,6 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
         chunk_segment = large_mp3[start:end]
         output_path_chunk = output_path / f"split_{chunk_number}.mp3"
         chunk_segment.export(output_path_chunk, format="mp3")
-    
-    print('Done.')
 
 
 def transcribe_audio_chunks(audio_chunks_path, output_folder):
@@ -80,7 +78,6 @@ def transcribe_audio_chunks(audio_chunks_path, output_folder):
     output_file_path = output_path / "transcripts.pkl"
     with open(output_file_path, 'wb') as file:
         pickle.dump(transcripts, file)
-    print('Done.')
 
 
 if __name__ == '__main__':
