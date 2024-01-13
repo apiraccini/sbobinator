@@ -15,6 +15,7 @@ You are a helpful assistant. You will receive a chunk of a raw transcription fro
 - fix and add punctuation, if necessary
 - fix typos and general grammar or syntax errors
 - organize the text into few relevant sections (only when there are different topics). Use markdown syntax for headers (use ## before the header)
+The text might be in a different language than English, keep that as it is.
 This is very important, take a big breath and perform the task carefully.
 """
 
@@ -28,7 +29,7 @@ def prepare_messages(transcript, system_prompt):
     return messages
 
 
-def num_tokens_from_messages(messages, model="gpt-4-0613"):
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo-16k-0613"):
     """Return the number of tokens used by a list of messages."""
     
     try:

@@ -30,10 +30,17 @@ def main():
     if not processed_text_path.exists():
         with open(transcripts_path, 'rb') as file:
             transcripts_list = pickle.load(file)
-        processed_text = process_text(transcripts_list, final_data_path, model='gpt-4-0613')
+        processed_text = process_text(transcripts_list, final_data_path, model='gpt-3.5-turbo-16k-0613')
         print("Text processed.")
 
-    # Step 4: generate HTML from processed text
+    # # Step 4: generate HTML from raw transcript text
+    # if not Path(final_data_path / "raw_transcript.html").exists():
+    #     with open(processed_text_path, 'rb') as file:
+    #         text = pickle.load(file)
+    #     text2html(text)
+    #     print("HTML generated from processed text.")
+
+    # Step 5: generate HTML from processed text
     if not Path(final_data_path / "transcript.html").exists():
         with open(processed_text_path, 'rb') as file:
             text = pickle.load(file)

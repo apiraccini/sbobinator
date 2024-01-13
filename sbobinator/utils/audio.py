@@ -20,21 +20,21 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     """
 
     input_path = Path(input_folder)
-    files = list(input_path.glob("*.mp3"))
+    files = list(input_path.glob("*.m4a"))
     
     if len(files) != 1:
-        print("Please provide a folder containing exactly one MP3 file.")
+        print("Please provide a folder containing exactly one file.")
         return
 
     size_in_bytes = Path(files[0]).stat().st_size
     size_in_megabytes = size_in_bytes / (1024 * 1024)
-    print(f"The size of the provided MP3 file is approximately {size_in_megabytes:.2f} Mb.")
+    print(f"The size of the provided file is approximately {size_in_megabytes:.2f} Mb.")
     
     max_chunk_size_bytes = max_chunk_size_mb * 1024 * 1024
     total_chunks = (size_in_bytes + max_chunk_size_bytes - 1) // max_chunk_size_bytes
 
     print('Loading the audio file...')
-    large_mp3 = AudioSegment.from_file(files[0], format="mp3")
+    large_mp3 = AudioSegment.from_file(files[0], format="m4a")
 
     total_duration_ms = len(large_mp3)
     max_chunk_duration_ms = total_duration_ms // total_chunks
@@ -68,7 +68,8 @@ def transcribe_audio_chunks(audio_chunks_path, output_folder):
         with open(audio_file, 'rb') as audio:
             transcript = client.audio.transcriptions.create(
                 model="whisper-1", 
-                file=audio, 
+                file=audio,
+                language='it',
                 response_format="text"
                 )
             transcripts.append(transcript)
