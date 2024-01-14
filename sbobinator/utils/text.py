@@ -108,7 +108,7 @@ def process_text(transcripts_list, output_folder, model):
     return out
 
 
-def text2html(text):
+def text2html(text, name='transcript'):
     """
     Convert input Markdown text to obatin a .html file.
 
@@ -121,7 +121,7 @@ def text2html(text):
     output_path.mkdir(parents=True, exist_ok=True)
 
     print('Saving final outputs...')
-    with open(output_path / 'transcript.html', 'w', encoding='utf-8') as file:
+    with open(output_path / f'{name}.html', 'w', encoding='utf-8') as file:
         file.write(html_content)
     print('Done.')
 
