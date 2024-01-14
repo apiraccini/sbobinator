@@ -9,7 +9,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 
-def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
+def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20, raw_audio_format='m4a'):
     """
     Splits a single large MP3 file into smaller chunks with a maximum size specified in megabytes
 
@@ -20,7 +20,7 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     """
 
     input_path = Path(input_folder)
-    files = list(input_path.glob("*.m4a"))
+    files = list(input_path.glob(f"*.{raw_audio_format}"))
     
     if len(files) != 1:
         print("Please provide a folder containing exactly one file.")
@@ -34,7 +34,7 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     total_chunks = (size_in_bytes + max_chunk_size_bytes - 1) // max_chunk_size_bytes
 
     print('Loading the audio file...')
-    large_mp3 = AudioSegment.from_file(files[0], format="m4a")
+    large_mp3 = AudioSegment.from_file(files[0], format=raw_audio_format)
 
     total_duration_ms = len(large_mp3)
     max_chunk_duration_ms = total_duration_ms // total_chunks
@@ -46,11 +46,13 @@ def split_big_audio(input_folder, output_folder, max_chunk_size_mb=20):
     for chunk_number, start in tqdm(enumerate(range(0, len(large_mp3), max_chunk_duration_ms), start=1), total=total_chunks):
         end = start + max_chunk_duration_ms if start + max_chunk_duration_ms < len(large_mp3) else len(large_mp3)
         chunk_segment = large_mp3[start:end]
+        if len(chunk_segment) == 0:
+            break
         output_path_chunk = output_path / f"split_{chunk_number}.mp3"
         chunk_segment.export(output_path_chunk, format="mp3")
 
 
-def transcribe_audio_chunks(audio_chunks_path, output_folder):
+def transcribe_audio_chunks(audio_chunks_path, output_folder, audio_language='en'):
     """
     Transcribes each audio chunk in the specified directory using the OpenAI API 
     and saves the list of trascriptions in a pickle file.
@@ -69,7 +71,7 @@ def transcribe_audio_chunks(audio_chunks_path, output_folder):
             transcript = client.audio.transcriptions.create(
                 model="whisper-1", 
                 file=audio,
-                language='it',
+                language=audio_language,
                 response_format="text"
                 )
             transcripts.append(transcript)
@@ -87,4 +89,4 @@ if __name__ == '__main__':
     processed_files_path = Path("data/processed")
     max_chunk_size_mb = 20 
 
-    split_big_audio(raw_file_path, processed_files_path, max_chunk_size_mb)
+    split_big_audio(input_folder=raw_file_path, output_folder=processed_files_path, max_chunk_size_mb=max_chunk_size_mb, raw_audio_format='m4a')
