@@ -32,7 +32,7 @@ def main():
     # Step 4: generate HTML from raw transcript text
     with open(transcripts_path, 'rb') as file:
         text = ' '.join(pickle.load(file))
-    text2html(text, name='raw_transcript')
+    text2html(text=text, name='raw_transcript')
     print("HTML generated from raw unprocessed text.")
 
     # Step 4: process text if processed text file doesn't exist
@@ -40,14 +40,14 @@ def main():
     if not processed_text_path.exists():
         with open(transcripts_path, 'rb') as file:
             transcripts_list = pickle.load(file)
-        processed_text = process_text(transcripts_list, final_data_path, model='gpt-3.5-turbo-16k-0613')
+        processed_text = process_text(transcripts_list=transcripts_list, output_folder=final_data_path, model='gpt-3.5-turbo-16k-0613')
         print("Text processed.")
     
     # Step 5: generate HTML from processed text
     if not Path(output_path / "transcript.html").exists():
         with open(processed_text_path, 'rb') as file:
-            text = pickle.load(file, name='transcript')
-        text2html(text)
+            text = pickle.load(file)
+        text2html(text=text, name='transcript')
         print("HTML generated from processed text.")
 
 if __name__ == "__main__":

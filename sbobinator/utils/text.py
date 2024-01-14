@@ -14,8 +14,8 @@ system_prompt = """
 You are a helpful assistant. You will receive a chunk of a raw transcription from a call to the Whisper API. I need you to process the text doing the following tasks:
 - fix and add punctuation, if necessary
 - fix typos and general grammar or syntax errors
-- organize the text into few relevant sections (only when there are different topics). Use markdown syntax for headers (use ## before the header)
-The text might be in a different language than English, keep that as it is.
+- If there are different topics in the text, then organize it into few relevant sections. Use markdown syntax for headers (use ## before the header)
+It is absolutely vital that you don't change the language of the text: if it is not English, you must keep it that way.
 This is very important, take a big breath and perform the task carefully.
 """
 
@@ -23,7 +23,7 @@ def prepare_messages(transcript, system_prompt):
 
     messages = [
         {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': f'\n\nTRANSCIPT CHUNK:\n\n<<<{transcript}>>>\n\nPROCESSED TRANSCRIPT CHUNK:'}   
+        {'role': 'user', 'content': f'\n\nTRANSCRIPT CHUNK:\n\n<<<{transcript}>>>\n\nPROCESSED TRANSCRIPT CHUNK:'}   
     ]
 
     return messages
@@ -92,7 +92,7 @@ def process_text(transcripts_list, output_folder, model):
         response = client.chat.completions.create(
             model=model,
             messages=prepare_messages(transcript, system_prompt),
-            temperature=0.001,
+            temperature=0,
             seed=42
         )
         text = response.choices[0].message.content
@@ -120,10 +120,9 @@ def text2html(text, name='transcript'):
     output_path = Path("data/out")
     output_path.mkdir(parents=True, exist_ok=True)
 
-    print('Saving final outputs...')
+    print('Converting markdown text to html...')
     with open(output_path / f'{name}.html', 'w', encoding='utf-8') as file:
         file.write(html_content)
-    print('Done.')
 
 
 if __name__ == '__main__':
